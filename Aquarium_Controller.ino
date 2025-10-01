@@ -3,41 +3,32 @@
 #include "pins.h"
 #include "logging.h"
 #include "sensors.h"
-#include "ble_if.h"
-
-void setup() {
-  Serial.begin(115200);
-  delay(100);
-  LOGI("Aquarium_Controller booting...");
-
-  // Hardware & subsystem init
-  pins::initPins();
-  sensors::init();
-#if USE_BLE
-  ble_if::init("TankMonitor");
-#endif
-
-  LOGI("Setup complete.");
-}
 
 static unsigned long lastSampleMs = 0;
 
+void setup() {
+  Serial.begin(115200);
+  delay(150);
+  LOGI("Aquarium_Controller booting...");
+
+  pins::initPins();
+  sensors::init();
+
+  LOGI("Init complete. Sampling every %lu ms", (unsigned long)SENSOR_SAMPLE_PERIOD_MS);
+}
+
 void loop() {
   const unsigned long now = millis();
-
-  // Periodic sensor read
   if (now - lastSampleMs >= SENSOR_SAMPLE_PERIOD_MS) {
     lastSampleMs = now;
+
     sensors::Reading r = sensors::readAll();
-    LOGI("T=%.2fC, pH=%.2f, Level=%s, ColorHz=%.0f",
-         r.tempC, r.pH, (r.levelWet ? "WET" : "DRY"), r.colorHz);
 
-#if USE_BLE
-    ble_if::notifyReading(r);
-#endif
+    LOGI("T=%.2fC  pH=%.2f  Level=%s  C=%.0f Hz  RGBn=(%.2f, %.2f, %.2f)",
+         r.tempC,
+         r.pH,
+         (r.levelWet ? "WET" : "DRY"),
+         r.colorHz,
+         r.rN, r.gN, r.bN);
   }
-
-#if USE_BLE
-  ble_if::poll();
-#endif
 }

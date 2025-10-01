@@ -1,15 +1,16 @@
 #pragma once
 #include <Arduino.h>
 
-inline void _logf(const char* level, const char* fmt, ...) {
-  char buf[160];
-  va_list args;
-  va_start(args, fmt);
-  vsnprintf(buf, sizeof(buf), fmt, args);
-  va_end(args);
-  Serial.printf("[%s] %s\n", level, buf);
-}
+#ifndef LOG_TAG
+#define LOG_TAG "AQ"
+#endif
 
-#define LOGI(...) _logf("INFO", __VA_ARGS__)
-#define LOGW(...) _logf("WARN", __VA_ARGS__)
-#define LOGE(...) _logf("ERR ", __VA_ARGS__)
+// printf-style info log
+#define LOGI(fmt, ...) do { \
+  Serial.printf("[INFO][" LOG_TAG "] " fmt "\n", ##__VA_ARGS__); \
+} while (0)
+
+// printf-style error log
+#define LOGE(fmt, ...) do { \
+  Serial.printf("[ERR ][" LOG_TAG "] " fmt "\n", ##__VA_ARGS__); \
+} while (0)

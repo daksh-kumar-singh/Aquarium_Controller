@@ -1,0 +1,53 @@
+# ---- OS-specific ----
+.DS_Store
+Thumbs.db
+
+# ---- Arduino IDE ----
+*.ino.cpp
+*.ino.hex
+*.ino.elf
+*.ino.bin
+*.ino.map
+
+# Arduino build cache (Arduino IDE 2.x)
+.build/
+*.arduinoIDE/
+*.ino.*
+
+# ---- VS Code / PlatformIO ----
+.vscode/
+.pio/
+cmake-build-*/
+
+# ---- ESP32 Arduino Core (Arduino15 folder caches) ----
+/**/.arduino15/
+/**/.arduinoIDE/
+/**/.arduino/
+
+# ---- Logs ----
+*.log
+*.out
+*.err
+
+# ---- Backups ----
+*~
+*.bak
+*.swp
+*.swo
+
+# ---- Local Config ----
+secrets.h
+wifi_config.h
+
+# ---- Compiled Objects ----
+*.o
+*.d
+*.a
+*.so
+*.exe
+
+# ---- Python (if you add scripts later) ----
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
