@@ -1,6 +1,6 @@
 # Aquarium_Controller (ESP32)
 
-**NOTE: ONLY CODE IN "examples" HAS BEEN TESTED AND IS BEING USED HERE**
+**NOTE: ONLY CODE IN THE "examples" FOLDER HAS BEEN TESTED AND IS BEING USED TO TEST THE SENSORS. FINAL INTEGRATION WITH THE MCU WILL BE DONE BY MCU SUBSYSTEM OWNER: TAYLOR LOUK.**
 
 Sensors & Testing subsystem firmware for a smart aquarium controller.
 
