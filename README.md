@@ -1,5 +1,7 @@
 # Aquarium_Controller (ESP32)
 
+** NOTE: ONLY CODE IN "examples" HAS BEEN TESTED AND IS BEING USED HERE **
+
 Sensors & Testing subsystem firmware for a smart aquarium controller.
 
 ## Features (current)
@@ -24,8 +26,6 @@ Sensors & Testing subsystem firmware for a smart aquarium controller.
 | TCS3200 – S3     | GPIO19    | Color filter select |
 | TCS3200 – OUT    | GPIO34    | Input-only pin |
 | Pushbutton (ON/OFF for examples) | GPIO12 | `INPUT_PULLUP`, press → LOW |
-
-> **Note:** The float switch **example** below defaults to **GPIO27** for quick testing, but the **project’s main wiring** uses **GPIO5**. You can change the example’s `#define FLOAT_PIN` to match your setup.
 
 ## Example Test Sketches
 The `examples/` folder contains standalone bring-up tests for each sensor:
