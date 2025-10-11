@@ -1,6 +1,6 @@
 # Aquarium_Controller (ESP32)
 
-** NOTE: ONLY CODE IN "examples" HAS BEEN TESTED AND IS BEING USED HERE **
+**NOTE: ONLY CODE IN "examples" HAS BEEN TESTED AND IS BEING USED HERE**
 
 Sensors & Testing subsystem firmware for a smart aquarium controller.
 
@@ -48,8 +48,6 @@ These sketches are designed for wiring verification and calibration before integ
 3. Open `Aquarium_Controller.ino` and upload to **ESP32 Dev Module**.
 
 ## Calibration
-- **pH**: Perform 2-point calibration using buffer solutions (pH 7 & 4/10).  
-  Update slope (`PH_SLOPE_M`) and offset (`PH_OFFSET_B`) in `config.h`.
 - **Temperature**: If necessary, apply an offset by comparing DS18B20 to a reference thermometer.
 - **Color (TCS3200)**: Log raw black/white values, then update `*_DARK` and `*_BRIGHT` constants in `config.h`.
 
