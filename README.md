@@ -1,6 +1,6 @@
 # Aquarium_Controller (ESP32)
 
-**NOTE:** Only the code in the `examples/` folder has been tested and is currently used for individual sensor verification.  
+**NOTE:** Code in 'examples' folder was used for primary individual testing, the same have since been integrated to work together at the same time. 
 Final integration with the main MCU system will be handled by **Taylor Louk (MCU Subsystem Owner).**
 
 ---
