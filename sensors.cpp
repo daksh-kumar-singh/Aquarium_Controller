@@ -6,34 +6,41 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
+// ---------------- TCS Calibration definitions ----------------
+#if USE_FREQ_MODE
+  float RED_FREQ_DARK  = 1645.0f, RED_FREQ_BRIGHT  = 17850.0f;
+  float GRN_FREQ_DARK  = 1470.0f, GRN_FREQ_BRIGHT  = 17225.0f;
+  float BLU_FREQ_DARK  = 1775.0f, BLU_FREQ_BRIGHT  = 20830.0f;
+#else
+  int   RED_DARK_US    =   400,   RED_BRIGHT_US    =   90;
+  int   GRN_DARK_US    =  1050,   GRN_BRIGHT_US    =  235;
+  int   BLU_DARK_US    =  1350,   BLU_BRIGHT_US    =  300;
+#endif
+
 // ---------------- DS18B20 ----------------
 static OneWire oneWire(pins::ONE_WIRE_BUS);
 static DallasTemperature ds18b20(&oneWire);
 
-// ---------------- pH (ADC) ---------------
+// ---------------- pH (ADC) ----------------
 static float readPH_Volts() {
-  // Average multiple samples to reduce noise
   const int N = 64;
   uint32_t acc = 0;
   for (int i = 0; i < N; ++i) {
     acc += analogRead(pins::PH_ADC);
     delayMicroseconds(150);
   }
-  float avgRaw = float(acc) / N;    // 0..4095 (ADC1 default 12-bit)
-  // ESP32 ADC is non-linear; for first pass, scale linearly by reference 3.3V
-  float volts = (avgRaw / 4095.0f) * 3.3f;
-  return volts;
+  float avgRaw = float(acc) / N;     // 0..4095 (12-bit)
+  return (avgRaw / 4095.0f) * 3.3f;  // simple linear scale
 }
 
 static float convertVoltsToPH(float volts) {
-  // Linear mapping: pH = m*V + b   (set m,b in config.h after 2-point calibration)
   return PH_SLOPE_M * volts + PH_OFFSET_B;
 }
 
 // -------------- Float switch -------------
 static bool readLevelWet() {
   // INPUT_PULLUP: LOW when switch closed (wet), HIGH when open (dry)
-  return digitalRead(pins::LEVEL_PIN) == LOW;
+  return digitalRead(pins::LEVEL_PIN) == HIGH;
 }
 
 // -------------- TCS3200 Helpers ----------
@@ -103,20 +110,15 @@ static void tcs_power(bool on) {
 namespace sensors {
 
 void init() {
-  // ADC resolution is 12-bit by default on ESP32 Arduino core for ADC1.
-  // If you need different attenuation/scaling, use analogSetPinAttenuation().
-
-  // Temp
+  // ADC resolution default 12-bit for ADC1 (GPIOs 32..39)
   ds18b20.begin();
-
-  // TCS3200 OFF initially; caller may change later
-  tcs_power(true);  // enable by default for periodic reads
+  tcs_power(true);  // keep enabled for continuous reads
 }
 
 static void tcs_read_norm(float& rN, float& gN, float& bN, float& cHzOut) {
   // CLEAR
   tcs_filter_clear(); delay(10);
-#if TCS_USE_FREQUENCY_MODE
+#if USE_FREQ_MODE
   float cHz = medianHz();
 #else
   unsigned long cPW = medianPW();
@@ -124,7 +126,7 @@ static void tcs_read_norm(float& rN, float& gN, float& bN, float& cHzOut) {
 
   // RED
   tcs_filter_red(); delay(10);
-#if TCS_USE_FREQUENCY_MODE
+#if USE_FREQ_MODE
   float rHz = medianHz();
 #else
   unsigned long rPW = medianPW();
@@ -132,7 +134,7 @@ static void tcs_read_norm(float& rN, float& gN, float& bN, float& cHzOut) {
 
   // GREEN
   tcs_filter_green(); delay(10);
-#if TCS_USE_FREQUENCY_MODE
+#if USE_FREQ_MODE
   float gHz = medianHz();
 #else
   unsigned long gPW = medianPW();
@@ -140,14 +142,13 @@ static void tcs_read_norm(float& rN, float& gN, float& bN, float& cHzOut) {
 
   // BLUE
   tcs_filter_blue(); delay(10);
-#if TCS_USE_FREQUENCY_MODE
+#if USE_FREQ_MODE
   float bHz = medianHz();
 #else
   unsigned long bPW = medianPW();
 #endif
 
-#if TCS_USE_FREQUENCY_MODE
-  // Map to 0..255 (per-channel), then normalize to 0..1
+#if USE_FREQ_MODE
   int R = map255_hz(rHz, RED_FREQ_DARK, RED_FREQ_BRIGHT);
   int G = map255_hz(gHz, GRN_FREQ_DARK, GRN_FREQ_BRIGHT);
   int B = map255_hz(bHz, BLU_FREQ_DARK, BLU_FREQ_BRIGHT);
@@ -164,7 +165,6 @@ static void tcs_read_norm(float& rN, float& gN, float& bN, float& cHzOut) {
   rN = (sum > 0) ? (float)R / sum : 0.0f;
   gN = (sum > 0) ? (float)G / sum : 0.0f;
   bN = (sum > 0) ? (float)B / sum : 0.0f;
-  // For pulse-width mode, still report CLEAR as an equivalent "Hz" field
   cHzOut = (cPW > 0) ? (1e6f / (float)cPW) : 0.0f;
 #endif
 }
@@ -172,18 +172,18 @@ static void tcs_read_norm(float& rN, float& gN, float& bN, float& cHzOut) {
 Reading readAll() {
   Reading r;
 
-  // Temperature (DS18B20)
+  // Temperature
   ds18b20.requestTemperatures();
   r.tempC = ds18b20.getTempCByIndex(0);
 
-  // pH (ADC)
+  // pH
   float v = readPH_Volts();
   r.pH = convertVoltsToPH(v);
 
-  // Water level
+  // Level
   r.levelWet = readLevelWet();
 
-  // Color sensor
+  // Color
   tcs_read_norm(r.rN, r.gN, r.bN, r.colorHz);
 
   return r;
