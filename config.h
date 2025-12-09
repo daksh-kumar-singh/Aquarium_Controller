@@ -4,8 +4,8 @@
 #define SENSOR_SAMPLE_PERIOD_MS 1000UL
 
 // ====== pH Calibration (2-point line: pH = m*V + b) ======
-#define PH_SLOPE_M   12.188803f   // slope (pH/Volt)
-#define PH_OFFSET_B  -7.464060f  // offset
+#define PH_SLOPE_M   12.947211f   // slope (pH/Volt)
+#define PH_OFFSET_B  -7.582004f  // offset
 
 // ====== TCS3200 Options ======
 #define USE_FREQ_MODE          1   // 1=Hz via HIGH+LOW; 0=HIGH pulse µs

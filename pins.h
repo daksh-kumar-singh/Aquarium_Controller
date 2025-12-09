@@ -4,24 +4,24 @@
 namespace pins {
 
 // ---- DS18B20 Temperature (OneWire) ----
-static constexpr int ONE_WIRE_BUS = 26;   // GPIO26 (pull-up 4.7k to 3V3)
+static constexpr int ONE_WIRE_BUS = 34;   // GPIO26 (pull-up 4.7k to 3V3)
 
 // ---- pH Analog (ADC1 only: 32..39) ----
 static constexpr int PH_ADC = 35;         // GPIO35 (input-only)
 
 // ---- Float switch (with internal pull-up) ----
-static constexpr int LEVEL_PIN = 5;       // GPIO5
+static constexpr int LEVEL_PIN = 2;       // GPIO5
 
 // ---- TCS3200 Color Sensor ----
-static constexpr int TCS_S0    = 16;      // freq scale / power
-static constexpr int TCS_S1    = 17;      // freq scale / power
-static constexpr int TCS_S2    = 18;      // filter select
-static constexpr int TCS_S3    = 19;      // filter select
-static constexpr int TCS_OUT   = 34;      // freq output (input-only OK)
+static constexpr int TCS_S0    = 19;      // freq scale / power
+static constexpr int TCS_S1    = 18;      // freq scale / power
+static constexpr int TCS_S2    = 17;      // filter select
+static constexpr int TCS_S3    = 16;      // filter select
+static constexpr int TCS_OUT   = 21;      // freq output (input-only OK)
 
 // ---- LCD I2C ----
-static constexpr int LCD_SDA   = 21;      // I2C SDA
-static constexpr int LCD_SCL   = 22;      // I2C SCL
+static constexpr int LCD_SDA   = 13;      // I2C SDA
+static constexpr int LCD_SCL   = 12;      // I2C SCL
 
 inline void initPins() {
   // Float switch

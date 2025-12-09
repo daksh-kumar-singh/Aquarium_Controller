@@ -8,9 +8,9 @@
 
 // ---------------- TCS Calibration definitions ----------------
 #if USE_FREQ_MODE
-  float RED_FREQ_DARK  = 1645.0f, RED_FREQ_BRIGHT  = 17850.0f;
-  float GRN_FREQ_DARK  = 1470.0f, GRN_FREQ_BRIGHT  = 17225.0f;
-  float BLU_FREQ_DARK  = 1775.0f, BLU_FREQ_BRIGHT  = 20830.0f;
+  float RED_FREQ_DARK  = 2941.0f, RED_FREQ_BRIGHT  = 22727.0f;
+  float GRN_FREQ_DARK  = 2809.0f, GRN_FREQ_BRIGHT  = 20833.0f;
+  float BLU_FREQ_DARK  = 3509.0f, BLU_FREQ_BRIGHT  = 23810.0f;
 #else
   int   RED_DARK_US    =   400,   RED_BRIGHT_US    =   90;
   int   GRN_DARK_US    =  1050,   GRN_BRIGHT_US    =  235;

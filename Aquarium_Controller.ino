@@ -303,7 +303,7 @@ void setup() {
 void loop() {
   // Handle calibration console at any time
   handleCalConsole();
-  updateButton(lcd);
+  // updateButton(lcd);
   if (!systemEnabled) {
     // System OFF → skip all sensor reads & updates
     delay(200);
