@@ -1,136 +1,177 @@
-# Aquarium_Controller (ESP32)
+# Aquarium Controller Firmware (ESP32)
 
-**NOTE:** Code in 'examples' folder was used for primary individual testing, the same have since been integrated to work together at the same time. 
-Final integration with the main MCU system will be handled by **Taylor Louk (MCU Subsystem Owner).**
+Firmware for an ESP32-based smart aquarium monitoring subsystem.  
+The controller reads **temperature**, **pH**, **water level**, and **color** data, then outputs live status on a **16×2 I²C LCD** while providing a **Serial Calibration Console** for accurate pH and TCS3200 color calibration.
 
----
-
-## Overview
-This firmware handles **sensor reading, calibration, and LCD output** for a smart aquarium controller subsystem.  
-It reads **temperature (DS18B20)**, **pH (ADC)**, **water level (float switch)**, and **color (TCS3200)**, while displaying live status on a **16×2 I²C LCD**.  
-A **pushbutton toggle** (GPIO13) enables or disables all sensors, and a **Serial Calibration Console** provides an interface for pH and color calibration.
+Final integration into the main MCU system will be completed by  
+**Taylor Louk (MCU Subsystem Owner).**
 
 ---
 
 ## Features
-- **Sensor Suite**
-  - **DS18B20** digital temperature (OneWire)
-  - **pH probe** via ADC input (2-point linear calibration)
-  - **Float switch** for water level
-  - **TCS3200** color sensor (frequency or pulse-width; median filtering)
-- **User Interface**
-  - **16×2 I²C LCD** (auto-detects `0x27` → `0x3F`)
-  - **Pushbutton** (GPIO13) toggle for ON/OFF system control
-- **Calibration Console** (via Serial @ 115200)
-  - Commands:  
-    `h` help · `A` / `B` = pH calibration points ·  
-    `k` = TCS black capture · `w` = TCS white capture · `r` = raw readout snapshot
+
+### Sensor Suite
+- **DS18B20** temperature sensor  
+- **pH probe** (ADC1 input, 2-point linear calibration)  
+- **Float switch** for water level detection  
+- **TCS3200** color sensor  
+  - Frequency or pulse-width mode  
+  - Median filtering (configurable)
+
+### User Interface
+- **16×2 I²C LCD** (auto-detects `0x27` → `0x3F`)  
+- **Pushbutton** (GPIO13)  
+  - Toggles system ON/OFF  
+  - When OFF, all sensor reads pause  
+
+### Serial Calibration Console (115200 baud)
+Command | Description
+--------|-------------
+`h` | Help menu  
+`A` | Capture pH calibration point A  
+`B` | Capture pH calibration point B  
+`k` | Capture TCS black reference  
+`w` | Capture TCS white reference  
+`r` | One-shot raw readings  
+
+The console prints copy-paste constants for `config.h` and `sensors.cpp`.
 
 ---
 
-## Hardware Wiring
+## Repository Structure
 
-| Component / Signal          | ESP32 Pin | Notes |
-|-----------------------------|-----------|-------|
-| **DS18B20** (data)          | GPIO26 | OneWire; requires **4.7 kΩ pull-up** to 3.3 V |
-| **pH sensor** (analog out)  | GPIO35 | ADC1 (input-only) |
-| **Float switch**            | GPIO5  | `INPUT_PULLUP`. Interpreted as **HIGH = wet/closed** (invert in code if needed). |
-| **TCS3200** S0 / S1         | GPIO16 / GPIO17 | Frequency scaling |
-| **TCS3200** S2 / S3         | GPIO18 / GPIO19 | Color filter selection |
-| **TCS3200** OUT             | GPIO34 | Frequency output (input-only OK) |
-| **LCD 1602 I²C** SDA / SCL  | GPIO21 / GPIO22 | Uses `LiquidCrystal_I2C` (auto-detects `0x27` → `0x3F`) |
-| **Pushbutton**              | GPIO13 | Connect to **GND** on press; configured as `INPUT_PULLUP` |
+```
+Aquarium_Controller/
+│
+├── Aquarium_Controller.ino
+├── config.h
+├── pins.h
+├── sensors.h
+├── sensors.cpp
+├── logging.h
+│
+└── examples/
+     ├── temp_sensor/
+     ├── ds18b20_button_test/
+     ├── float_switch_test/
+     └── color_sensor_LEDs/
+```
 
-**Pushbutton wiring (4-pin tact switch):**  
-Use **one pair** of pins across the narrow side. Connect **GPIO13** to one leg and the **diagonally opposite leg** to **GND**. Leave the other pair unconnected.
+---
+
+## Hardware Wiring (matches `pins.h`)
+
+| Component / Signal | ESP32 Pin | Notes |
+|--------------------|-----------|-------|
+| **DS18B20 data** | GPIO34 | Requires **4.7 kΩ pull-up** |
+| **pH analog** | GPIO35 | ADC1 input-only |
+| **Float switch** | GPIO2 | `INPUT_PULLUP` → HIGH=dry, LOW=wet |
+| **TCS3200 S0 / S1** | GPIO19 / GPIO18 | Frequency scaling |
+| **TCS3200 S2 / S3** | GPIO17 / GPIO16 | Filter selection |
+| **TCS3200 OUT** | GPIO21 | Frequency input |
+| **LCD SDA / SCL** | GPIO13 / GPIO12 | I²C |
+| **Pushbutton** | GPIO13 | `INPUT_PULLUP`; connect to **GND** |
+
+### Pushbutton Wiring (4-pin tact switch)
+```
+GPIO13 ----[switch]---- GND
+```
 
 ---
 
 ## Build Instructions
 
-1. Install **Arduino IDE 2.x** and **ESP32 core** (Espressif).
-2. Install required libraries:
-   - `OneWire`
-   - `DallasTemperature`
-   - `LiquidCrystal_I2C`
-3. Open `Aquarium_Controller.ino` and upload to **ESP32 Dev Module**.
+1. Install **Arduino IDE 2.x**  
+2. Install **ESP32 core** (Espressif)  
+3. Install libraries:  
+   - `OneWire`  
+   - `DallasTemperature`  
+   - `LiquidCrystal_I2C`  
+4. Open `Aquarium_Controller.ino`  
+5. Select **ESP32 Dev Module**  
+6. Upload  
 
 ---
 
-## Running the Firmware
+## Runtime Behavior
 
-1. Open the **Serial Monitor** at **115200 baud**.  
-2. The LCD shows a splash screen, then updates live sensor values every `SENSOR_SAMPLE_PERIOD_MS` (default = 1000 ms).  
-3. Press the **pushbutton** to toggle the system ON/OFF.  
-   - LCD updates to “System: ON/OFF”  
-   - When OFF, all sensors pause.  
-4. Access the **Calibration Console** anytime through Serial:
-   - `h` — help menu  
-   - `A` — record pH point A (prompted for known pH)  
-   - `B` — record pH point B  
-   - `k` — capture TCS black reference  
-   - `w` — capture TCS white reference  
-   - `r` — print one-shot raw readings (pH voltage + TCS values)
+### On Boot
+- Initializes sensors & LCD  
+- Auto-detects I²C address (`0x27` → `0x3F`)  
+- Displays splash screen  
+- Begins periodic updates (`SENSOR_SAMPLE_PERIOD_MS`)  
+
+### Button Toggle
+- Press button (GPIO13 → GND)  
+- Toggles **System: ON/OFF**  
+- When OFF → sensors pause, LCD displays OFF message  
+
+### LCD Output
+```
+T:24.8C  pH:7.05
+Lvl:WET  Clr:R
+```
 
 ---
 
-## Calibration
+## Calibration Instructions
 
-### pH (2-Point Calibration)
-1. Immerse the probe in **buffer 1** (e.g., pH 7). Press `A`, enter known pH.  
-2. Rinse and place in **buffer 2** (e.g., pH 4 or 10). Press `B`, enter known pH.  
-3. Console outputs:
+### pH Calibration (Two-Point)
+1. Insert probe into **buffer A** (e.g., pH 7)  
+   → press `A`, enter known pH  
+2. Insert into **buffer B** (e.g., pH 4 or 10)  
+   → press `B`, enter known pH  
+3. Console prints:
    ```c
    #define PH_SLOPE_M   <value>f
    #define PH_OFFSET_B  <value>f
-4. Paste these lines into `config.h` and re-upload.
+   ```
+4. Copy into `config.h`
 
 ---
 
-## Color (TCS3200)
+### TCS3200 Color Calibration
+1. Hold sensor over **black target** → press `k`  
+2. Hold sensor over **white target** → press `w`  
+3. Console prints recommended constants:
+   ```c
+   float RED_FREQ_DARK = ...;
+   float RED_FREQ_BRIGHT = ...;
+   // etc.
+   ```
+4. Replace values at top of `sensors.cpp`  
 
-1. Hold sensor over a **black surface** → press `k`.  
-2. Hold over a **white surface** → press `w`.  
-3. Console prints suggested values for `sensors.cpp` (top of file) as `*_FREQ_*` (Hz) or `*_US` (µs).  
-4. Replace the corresponding calibration constants and re-upload.
-
----
-
-## Configuration (`config.h`)
-
-- **SENSOR_SAMPLE_PERIOD_MS** — sample/refresh rate (default **1000 ms**)  
-- **pH mapping:** `PH_SLOPE_M`, `PH_OFFSET_B`  
-- **TCS3200 options:**  
-  - `USE_FREQ_MODE` (1 = Hz via HIGH+LOW, 0 = µs via HIGH pulse)  
-  - `TCS_MEDIAN_SAMPLES` (odd number, default 7)  
-  - `TCS_START_20_PERCENT` (start scale 20% vs 100%)  
-
-> **Note:**  
-> The firmware treats `digitalRead(GPIO5) == HIGH` as **wet/closed**.  
-> If reversed, modify logic in `sensors.cpp::readLevelWet()`.
+Supports:
+- **Frequency mode** (`USE_FREQ_MODE = 1`)  
+- **Pulse-width mode** (`USE_FREQ_MODE = 0`)  
 
 ---
 
-## Example Test Sketches (`examples/`)
+## Configuration Options (`config.h`)
 
-- `temp_sensor/` — DS18B20 continuous °C/°F readings  
-- `ds18b20_button_test/` — DS18B20 with button ON/OFF toggle (GPIO12)  
-- `color_sensor_LEDs/` — Standalone TCS3200 with ON/OFF control and calibration  
-- `float_switch_test/` — Debounced float switch test (GPIO27 default); set `INVERT_LOGIC` if needed  
+| Name | Description |
+|------|-------------|
+| `SENSOR_SAMPLE_PERIOD_MS` | Update period |
+| `PH_SLOPE_M`, `PH_OFFSET_B` | Calibration constants |
+| `USE_FREQ_MODE` | `1`=Hz mode, `0`=pulse-width |
+| `TCS_MEDIAN_SAMPLES` | Odd number, sample count |
+| `TCS_START_20_PERCENT` | Use 20% frequency scaling |
 
-These sketches validate wiring and calibration before full integration.
+Float switch logic:  
+`digitalRead(GPIO2) == HIGH` → **dry**  
+Change logic in `readLevelWet()` if reversed.
 
 ---
 
 ## Troubleshooting
 
-- **LCD blank:** Check SDA/SCL (21/22), I²C address (0x27 or 0x3F), and confirm that `LiquidCrystal_I2C` is installed.  
-- **DS18B20 returns `DEVICE_DISCONNECTED_C`:** Verify **4.7 kΩ pull-up** from data to 3.3 V and wiring to **GPIO26**.  
-- **TCS3200 readings noisy/low:** Try `TCS_START_20_PERCENT`, shield from ambient light, and recalibrate constants.  
-- **Float switch reversed:** Invert logic in `readLevelWet()` or flip float orientation.
+- **LCD blank:** Check SDA/SCL wiring (GPIO13/12), verify address.  
+- **DS18B20 error:** Ensure pull-up resistor and wiring to GPIO34.  
+- **Color unstable:** Recalibrate, shield from ambient light, increase median samples.  
+- **Incorrect pH:** Re-run calibration; update `config.h`.  
 
 ---
 
 ## License
-
 MIT
+
